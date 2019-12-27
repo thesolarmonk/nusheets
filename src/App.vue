@@ -1,5 +1,5 @@
 <template>
-  <div class="app">
+  <div class="app fill-viewport">
     <router-view />
   </div>
 </template>
@@ -31,12 +31,14 @@ html {
 /* CSS Global Style Variables */
 
 :root {
-  --background-color-default: #fff;
   --primary-color: #fff;
-  --primary-color-dark: rgb(230, 230, 230);
+  --primary-color-dark: #666;
+  --primary-color-invert: #000;
+  --secondary-color: rgb(230, 230, 230);
   --accent-color: rgb(41, 111, 252);
 
   --font-color-default: #000;
+  --font-color-invert: #fff;
 
   --font-family: "Inter", sans-serif;
   --font-style-default: normal;
@@ -56,14 +58,17 @@ html {
 html,
 body,
 .app {
-  background-color: var(--background-color-default);
+  background-color: var(--primary-color);
   z-index: 0;
 
   font-size: var(--font-size-default);
-  overflow: scroll;
 }
 
 .app {
+  overflow: hidden;
+}
+
+.fill-viewport {
   width: 100vw;
   height: 100vh;
 }
