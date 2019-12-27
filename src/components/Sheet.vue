@@ -3,7 +3,7 @@
     <table class="sheet">
       <tbody>
         <tr class="sheet__row">
-          <th class="cell cell--corner"></th>
+          <th class="cell cell--header cell--column-header cell--corner"></th>
           <th
             class="cell cell--header cell--column-header"
             v-for="(col, n_col) in col_headers"
@@ -46,4 +46,52 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+.sheet-container {
+  max-width: 100%;
+  max-height: 100%;
+
+  .sheet {
+    position: relative;
+    border-collapse: collapse;
+    overflow-x: auto;
+
+    .cell {
+      border: 1px solid #666;
+
+      width: 120px;
+      min-width: 100px;
+      height: 30px;
+
+      vertical-align: middle;
+      padding: 3px;
+    }
+
+    .cell--header {
+      text-align: center;
+
+      font-size: var(--font-size-small);
+      font-weight: var(--font-weight-bold);
+      background-color: var(--primary-color-dark);
+    }
+
+    .cell--row-header {
+      position: sticky;
+      left: 0;
+      border-right: 1px solid #666;
+    }
+
+    .cell--column-header {
+      position: sticky;
+      top: 0;
+      border-bottom: 1px solid #666;
+    }
+
+    .cell--corner {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+    }
+  }
+}
+</style>

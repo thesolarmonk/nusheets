@@ -33,13 +33,15 @@ html {
 :root {
   --background-color-default: #fff;
   --primary-color: #fff;
-
+  --primary-color-dark: rgb(230, 230, 230);
   --accent-color: rgb(41, 111, 252);
 
   --font-color-default: #000;
 
   --font-family: "Inter", sans-serif;
   --font-style-default: normal;
+  --font-size-default: 14px;
+  --font-size-small: 12px;
   --font-weight-normal: 400;
   --font-weight-bold: 600;
 
@@ -56,6 +58,9 @@ body,
 .app {
   background-color: var(--background-color-default);
   z-index: 0;
+
+  font-size: var(--font-size-default);
+  overflow: scroll;
 }
 
 .app {
