@@ -5,28 +5,37 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    t_rows: 2000,
-    t_cols: 10,
-    t_exp: null,
-    t_data: null
+    s_rows: 2000,
+    s_cols: 10,
+    s_exp: null,
+    s_data: null
   },
   getters: {
-    getTableData: state => {
-      return state.t_data;
+    s_rows: state => {
+      return state.s_rows;
     },
-    getCellData: state => {
-      return state.t_data;
+    s_cols: state => {
+      return state.s_cols;
+    },
+    s_exp: state => {
+      return state.s_exp;
+    },
+    s_data: state => {
+      return state.s_data;
     }
+    // cellData: state => {
+    //   return state.s_data;
+    // }
   },
   mutations: {
     createTable: state => {
-      state.t_exp = Array.from({ length: state.t_rows }, () =>
-        Array.from({ length: state.t_cols }, () => null)
+      state.s_exp = Array.from({ length: state.s_rows }, () =>
+        Array.from({ length: state.s_cols }, () => null)
       );
-      state.t_data = state.t_exp;
+      state.s_data = state.s_exp;
     },
     updateCellExp: (state, payload) => {
-      state.t_exp[payload.row][payload.column] = payload.value;
+      state.s_exp[payload.row][payload.column] = payload.value;
     }
     // updateTableData: state => {}
   },
