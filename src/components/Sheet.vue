@@ -1,6 +1,6 @@
 <template>
-  <div class="sheet-container">
-    <table class="sheet">
+  <div class="sheet__container">
+    <table class="sheet__table">
       <tbody>
         <tr class="sheet__row">
           <th class="cell cell--header cell--column-header cell--corner"></th>
@@ -47,58 +47,62 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.sheet-container {
-  max-width: 100%;
-  max-height: 100%;
+.sheet__container {
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
 
-  .sheet {
+  .sheet__table {
+    width: 100%;
+
     position: relative;
     border-collapse: collapse;
-    overflow-x: auto;
 
-    .cell {
-      border: 1px solid #666;
+    .sheet__row {
+      .cell {
+        user-select: none;
 
-      width: 120px;
-      min-width: 100px;
-      height: 30px;
+        border: 1px solid #666;
 
-      vertical-align: middle;
-      padding: 3px;
-    }
+        width: 120px;
+        min-width: 100px;
+        height: 30px;
 
-    .cell--header {
-      text-align: center;
+        vertical-align: middle;
+        padding: 3px;
+      }
 
-          font-size: var(--font-size-small);
-          font-weight: var(--font-weight-bold);
-          background-color: var(--secondary-color);
-        }
+      .cell--header {
+        text-align: center;
 
-        .cell--row-header {
-          position: sticky;
-          left: 0;
-        }
+        font-size: var(--font-size-small);
+        font-weight: var(--font-weight-bold);
+        background-color: var(--secondary-color);
+      }
 
-        .cell--column-header {
-          position: sticky;
-          top: 0;
-        }
+      .cell--row-header {
+        position: sticky;
+        left: 0;
+      }
 
-        .cell--corner {
-          position: sticky;
-          left: 0;
-          z-index: 1;
-        }
+      .cell--column-header {
+        position: sticky;
+        top: 0;
+      }
 
-        .cell:last-child {
-          border-right-width: 0px;
-        }
+      .cell--corner {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+      }
 
-        &:last-child {
-          .cell {
-            border-bottom-width: 0px;
-          }
+      .cell:last-child {
+        border-right-width: 0px;
+      }
+
+      &:last-child {
+        .cell {
+          border-bottom-width: 0px;
         }
       }
     }
