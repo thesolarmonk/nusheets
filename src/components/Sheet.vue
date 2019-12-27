@@ -70,28 +70,59 @@ export default {
     .cell--header {
       text-align: center;
 
-      font-size: var(--font-size-small);
-      font-weight: var(--font-weight-bold);
-      background-color: var(--primary-color-dark);
-    }
+          font-size: var(--font-size-small);
+          font-weight: var(--font-weight-bold);
+          background-color: var(--secondary-color);
+        }
 
-    .cell--row-header {
-      position: sticky;
-      left: 0;
-      border-right: 1px solid #666;
-    }
+        .cell--row-header {
+          position: sticky;
+          left: 0;
+        }
 
-    .cell--column-header {
-      position: sticky;
-      top: 0;
-      border-bottom: 1px solid #666;
-    }
+        .cell--column-header {
+          position: sticky;
+          top: 0;
+        }
 
-    .cell--corner {
-      position: sticky;
-      left: 0;
-      z-index: 1;
+        .cell--corner {
+          position: sticky;
+          left: 0;
+          z-index: 1;
+        }
+
+        .cell:last-child {
+          border-right-width: 0px;
+        }
+
+        &:last-child {
+          .cell {
+            border-bottom-width: 0px;
+          }
+        }
+      }
     }
+  }
+}
+
+.sheet__container {
+  &::-webkit-scrollbar-track {
+    background-color: var(--primary-color);
+    border: 1px solid var(--primary-color-dark);
+  }
+
+  &::-webkit-scrollbar {
+    width: 15px;
+    height: 15px;
+    background-color: var(--primary-color);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: var(--primary-color-dark);
+  }
+
+  &::-webkit-scrollbar-corner {
+    background-color: var(--primary-color-dark);
   }
 }
 </style>
