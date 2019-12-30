@@ -181,13 +181,32 @@ export default {
         vertical-align: middle;
         padding: 3px 3px 3px 7px;
 
+        &:hover {
+          background-color: #ddd;
+        }
+
         .cell__input {
           width: 100%;
+
+          border: none;
+          display: inline;
+          font-family: inherit;
+          font-size: inherit;
+          padding: none;
+          background-color: transparent;
+
+          &:focus {
+            outline: none;
+          }
         }
       }
 
+      .cell--selected {
+        background-color: rgb(172, 238, 255) !important;
+      }
+
       .cell--active {
-        background-color: rgb(172, 238, 255);
+        box-shadow: 1px 1px 4px 1px rgb(0, 68, 255);
       }
 
       .cell--header {
