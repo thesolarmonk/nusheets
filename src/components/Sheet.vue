@@ -35,16 +35,23 @@
 export default {
   data() {
     return {
-      s_rows: 2000,
+      s_rows: 500,
       s_cols: 10,
       s_data: null,
-      c_active: {
+      s_state: null,
+      s_state_null: null,
+      c_pos: {
         row: 0,
         col: 0
-      }
+      },
+      c_exp: null,
+      mouseDown: false
     };
   },
   computed: {
+    c_data: function() {
+      return this.s_data[this.c_pos.row][this.c_pos.col];
+    },
     col_headers: function() {
       return [...Array(this.s_cols).keys()].map(col =>
         String.fromCharCode(97 + col).toUpperCase()
