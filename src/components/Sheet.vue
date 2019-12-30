@@ -146,6 +146,69 @@ export default {
       this.c_active = { row: n_row, col: n_col };
       this.c_exp;
       this.s_data[n_row][n_col].state = 1;
+    evaluateExp: function(exp) {
+      let result;
+
+      if (this.c_exp[0] === "=") {
+        let exp_var;
+
+        try {
+          exp_var = this.evaluateVariables(exp);
+        } catch (error) {
+          result = "#ERROR!";
+        }
+
+        try {
+          result = eval(exp_var.substring(1));
+        } catch (error) {
+          result = "#ERROR!";
+        }
+      } else {
+        result = exp;
+      }
+
+      return result;
+    },
+    evaluateVariables: function(exp) {
+      exp = exp.toUpperCase();
+
+      let re_rows = /(?<=[A-Z]{1})[0-9]{1,}/g;
+      let cell_row_nums = exp.match(re_rows);
+
+      console.log(cell_row_nums);
+
+      if (cell_row_nums === null) {
+        return exp;
+      }
+
+      let re_cols = /[A-Z]{1}(?=[0-9]{1,})/g;
+      let cell_col_letters = exp.match(re_cols);
+      let cell_col_nums = cell_col_letters.map(
+        col => col.toUpperCase().charCodeAt(0) - 65
+      );
+
+      let cells = cell_row_nums.length;
+      let exp_new = exp;
+      let exp_prev;
+      let exp_temp;
+
+      for (let i = 0; i < cells; i++) {
+        let value = this.s_data[cell_row_nums[i] - 1][cell_col_nums[i]].eval;
+        if (value === null) value = 0;
+        let re = new RegExp(cell_col_letters[i] + cell_row_nums[i]);
+
+        exp_prev = exp_new;
+        exp_new = exp_prev.replace(re, value);
+        exp_temp = "";
+        while (exp_prev != exp_new) {
+          exp_temp = exp_new;
+          exp_new = exp_prev.replace(re, value);
+          exp_prev = exp_temp;
+        }
+      }
+
+      return exp_new;
+    }
     }
     // updateCellExp: (state, payload) => {
     //   state.s_exp[payload.row][payload.column] = payload.value;
