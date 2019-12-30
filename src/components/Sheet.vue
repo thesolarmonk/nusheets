@@ -14,11 +14,17 @@
           <th class="cell cell--header cell--row-header">{{ n_row + 1 }}</th>
           <td
             class="cell cell--data"
+            :class="{ 'cell--active': cell.state }"
             v-for="(cell, n_col) in row"
+            :id="n_row + '_' + n_col"
             :key="n_row + '_' + n_col"
             :data-row="n_row"
             :data-column="n_col"
-          >{{ s_data[n_row][n_col] }}</td>
+            @click="clickCell(n_row, n_col)"
+          >
+            <input v-if="cell.state" class="cell__input" type="text" v-model="c_active" />
+            <span v-else>{{ cell.eval }}</span>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -26,11 +32,19 @@
 </template>
 
 <script>
-import { mapGetters, mapMutations } from "vuex";
-
 export default {
+  data() {
+    return {
+      s_rows: 2000,
+      s_cols: 10,
+      s_data: null,
+      c_active: {
+        row: 0,
+        col: 0
+      }
+    };
+  },
   computed: {
-    ...mapGetters(["s_rows", "s_cols", "s_data", "s_exp"]),
     col_headers: function() {
       return [...Array(this.s_cols).keys()].map(col =>
         String.fromCharCode(97 + col).toUpperCase()
