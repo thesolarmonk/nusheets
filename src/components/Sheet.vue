@@ -14,15 +14,27 @@
           <th class="cell cell--header cell--row-header">{{ n_row + 1 }}</th>
           <td
             class="cell cell--data"
-            :class="{ 'cell--active': cell.state }"
+            :class="{ 'cell--selected': cell.state, 'cell--active': cell.state == 2}"
             v-for="(cell, n_col) in row"
             :id="n_row + '_' + n_col"
             :key="n_row + '_' + n_col"
             :data-row="n_row"
             :data-column="n_col"
-            @click="clickCell(n_row, n_col)"
+            @mousedown="c_selectStart(n_row, n_col)"
+            @mouseover="c_selecting(n_row, n_col)"
+            @mouseup="c_selectEnd()"
+            @dblclick="c_inputStart(n_row, n_col)"
           >
-            <input v-if="cell.state" class="cell__input" type="text" v-model="c_active" />
+            <input
+              v-if="cell.state"
+              class="cell__input"
+              type="text"
+              v-model="c_exp"
+              autocomplete="off"
+              @focus="c_inputStart(n_row, n_col)"
+              @blur="c_inputEnd()"
+              @click.stop
+            />
             <span v-else>{{ cell.eval }}</span>
           </td>
         </tr>
@@ -141,11 +153,35 @@ export default {
         })
       );
     },
-    clickCell(n_row, n_col) {
-      this.s_data[this.c_active.row][this.c_active.col].state = 0;
-      this.c_active = { row: n_row, col: n_col };
-      this.c_exp;
+    c_selectStart(n_row, n_col) {
+      this.mouseDown = true;
+      this.s_state = this.s_state_null;
+
+      this.s_data[this.c_pos.row][this.c_pos.col].state = 0;
+      this.c_pos = { row: n_row, col: n_col };
+      this.c_exp = this.s_data[n_row][n_col].eval;
       this.s_data[n_row][n_col].state = 1;
+    },
+    c_selecting(n_row, n_col) {
+      if (this.mouseDown) {
+        this.s_state = this.s_state_null;
+
+        let min_row = Math.min(n_row, this.c_pos.row);
+        let min_col = Math.min(n_col, this.c_pos.col);
+        let max_row = Math.max(n_row, this.c_pos.row);
+        let max_col = Math.max(n_col, this.c_pos.col);
+
+        for (let i = min_row; i <= max_row; i++) {
+          for (let j = min_col; j <= max_col; j++) {
+            this.s_state[i][j] = 1;
+          }
+        }
+      }
+    },
+    c_selectEnd() {
+      this.mouseDown = false;
+      this.s_state = this.s_state_null;
+    },
     evaluateExp: function(exp) {
       let result;
 
@@ -209,16 +245,13 @@ export default {
 
       return exp_new;
     }
-    }
-    // updateCellExp: (state, payload) => {
-    //   state.s_exp[payload.row][payload.column] = payload.value;
-    // }
     // updateTableData: state => {}
   },
   mounted() {
     this.createTable();
     document.addEventListener("keydown", this.handleKeyEvent, false);
-    this.clickCell(0, 0);
+    this.c_selectStart(0, 0);
+    this.mouseDown = false;
   }
 };
 </script>
