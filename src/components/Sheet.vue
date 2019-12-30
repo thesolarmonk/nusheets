@@ -57,40 +57,71 @@ export default {
       keys[e.keyCode] = true;
 
       switch (e.keyCode) {
+        //Delete
+        case 8:
+          this.s_data[this.c_pos.row][this.c_pos.col].exp = null;
+          this.s_data[this.c_pos.row][this.c_pos.col].eval = null;
+          this.c_exp = null;
+          e.preventDefault();
+          break;
+
+        // Tab
         case 9:
           if (keys[16]) {
-            this.clickCell(
-              this.c_active.row,
-              Math.max(this.c_active.col - 1, 0)
-            );
+            this.c_selectStart(this.c_pos.row, Math.max(this.c_pos.col - 1, 0));
           } else {
-            this.clickCell(
-              this.c_active.row,
-              Math.min(this.c_active.col + 1, this.s_cols - 1)
+            this.c_selectStart(
+              this.c_pos.row,
+              Math.min(this.c_pos.col + 1, this.s_cols - 1)
             );
           }
+          e.preventDefault();
           break;
+
+        // Enter
+        case 13:
+          if (this.c_data.state == 1) {
+            this.c_inputStart(this.c_pos.row, this.c_pos.col);
+          } else {
+            this.c_inputEnd();
+          }
+          break;
+
+        // Escape
+        case 27:
+          this.c_inputEnd();
+          break;
+
+        // Left Arrow
         case 37:
-          this.clickCell(this.c_active.row, Math.max(this.c_active.col - 1, 0));
+          this.c_selectStart(this.c_pos.row, Math.max(this.c_pos.col - 1, 0));
+          e.preventDefault();
           break;
+
+        // Up Arrow
         case 38:
-          this.clickCell(Math.max(this.c_active.row - 1, 0), this.c_active.col);
+          this.c_selectStart(Math.max(this.c_pos.row - 1, 0), this.c_pos.col);
+          e.preventDefault();
           break;
+
+        // Right Arrow
         case 39:
-          this.clickCell(
-            this.c_active.row,
-            Math.min(this.c_active.col + 1, this.s_cols - 1)
+          this.c_selectStart(
+            this.c_pos.row,
+            Math.min(this.c_pos.col + 1, this.s_cols - 1)
           );
+          e.preventDefault();
           break;
+
+        // Down Arrow
         case 40:
-          this.clickCell(
-            Math.min(this.c_active.row + 1, this.s_rows - 1),
-            this.c_active.col
+          this.c_selectStart(
+            Math.min(this.c_pos.row + 1, this.s_rows - 1),
+            this.c_pos.col
           );
+          e.preventDefault();
           break;
       }
-
-      e.preventDefault();
     },
     createTable() {
       this.s_data = Array.from({ length: this.s_rows }, () =>
