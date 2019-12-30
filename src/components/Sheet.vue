@@ -146,12 +146,16 @@ export default {
       this.s_data = Array.from({ length: this.s_rows }, () =>
         Array.from({ length: this.s_cols }, () => {
           return {
-            exp: 4895,
-            eval: 4895,
+            exp: null,
+            eval: null,
             state: 0
           };
         })
       );
+      this.s_state = Array.from({ length: this.s_rows }, () =>
+        Array.from({ length: this.s_cols }, () => 0)
+      );
+      this.s_state_null = this.s_state;
     },
     c_selectStart(n_row, n_col) {
       this.mouseDown = true;
@@ -181,6 +185,28 @@ export default {
     c_selectEnd() {
       this.mouseDown = false;
       this.s_state = this.s_state_null;
+    },
+    c_inputStart(n_row, n_col) {
+      this.c_selectStart(n_row, n_col);
+      this.s_data[n_row][n_col].state = 2;
+      this.c_exp = this.s_data[n_row][n_col].exp;
+
+      let input = document.getElementsByClassName("c_input")[0];
+      input.focus();
+      input.selectionStart = input.selectionEnd;
+      input.scrollLeft = input.scrollWidth;
+    },
+    c_inputEnd() {
+      let input = document.getElementsByClassName("c_input")[0];
+      input.blur();
+
+      let result = this.evaluateExp(this.c_exp);
+
+      this.s_data[this.c_pos.row][this.c_pos.col].state = 1;
+      this.s_data[this.c_pos.row][this.c_pos.col].exp = this.c_exp;
+      this.s_data[this.c_pos.row][this.c_pos.col].eval = result;
+
+      // this.c_exp = result;
     },
     evaluateExp: function(exp) {
       let result;
