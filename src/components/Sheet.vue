@@ -45,6 +45,8 @@
 </template>
 
 <script>
+import { mapMutations } from "vuex";
+import { mapGetters } from "vuex";
 import _ from "../../node_modules/lodash";
 
 export default {
@@ -64,6 +66,7 @@ export default {
     };
   },
   computed: {
+    ...mapGetters(["saved_data"]),
     c_data: function() {
       return this.s_data[this.c_pos.row][this.c_pos.col];
     },
@@ -74,6 +77,7 @@ export default {
     }
   },
   methods: {
+    ...mapMutations(["save", "restore"]),
     handleKeyEvent(e) {
       let keys = [];
       keys[e.keyCode] = true;
@@ -105,13 +109,13 @@ export default {
           if (this.c_data.state == 1) {
             this.c_inputStart(this.c_pos.row, this.c_pos.col);
           } else {
-            this.c_inputEnd();
+            this.c_inputEnd(this.c_exp);
           }
           break;
 
         // Escape
         case 27:
-          this.c_inputEnd();
+          this.c_inputEnd(this.c_exp);
           this.c_clear_selection();
           break;
 
@@ -146,22 +150,10 @@ export default {
           break;
       }
     },
-    createTable() {
-      this.s_data = Array.from({ length: this.s_rows }, () =>
-        Array.from({ length: this.s_cols }, () => {
-          return {
-            exp: null,
-            eval: null,
-            state: 0
-          };
-        })
-      );
-      this.s_selected_empty = Array(this.s_rows)
-        .fill()
-        .map(() => Array(this.s_cols).fill(false));
-      this.c_clear_selection();
-    },
     c_selectStart(n_row, n_col) {
+      if (this.c_data.state == 2) {
+        this.c_inputEnd(this.c_exp);
+      }
       this.mouseDown = true;
       this.c_clear_selection();
 
@@ -210,18 +202,18 @@ export default {
       input.selectionStart = input.selectionEnd;
       input.scrollLeft = input.scrollWidth;
     },
-    c_inputEnd() {
+    c_inputEnd(exp) {
       let input = document.getElementsByClassName("cell__input")[0];
       input.disabled = true;
       input.blur();
 
       let result = null;
-      if (this.c_exp) {
-        result = this.evaluateExp(this.c_exp);
+      if (exp) {
+        result = this.evaluateExp(exp);
       }
 
       this.s_data[this.c_pos.row][this.c_pos.col].state = 1;
-      this.s_data[this.c_pos.row][this.c_pos.col].exp = this.c_exp;
+      this.s_data[this.c_pos.row][this.c_pos.col].exp = exp;
       this.s_data[this.c_pos.row][this.c_pos.col].eval = result;
 
       this.c_exp = result;
@@ -247,6 +239,11 @@ export default {
         result = exp;
       }
 
+      if (typeof result == "number") {
+        if (!Number.isInteger(result)) {
+          result = result.toFixed(2);
+        }
+      }
       return result;
     },
     evaluateVariables: function(exp) {
@@ -286,14 +283,60 @@ export default {
       }
 
       return exp_new;
+    },
+    createTable() {
+      this.s_rows = 50;
+      this.s_cols = 10;
+      this.s_data = Array.from({ length: this.s_rows }, () =>
+        Array.from({ length: this.s_cols }, () => {
+          return {
+            exp: null,
+            eval: null,
+            state: 0
+          };
+        })
+      );
+      this.s_selected_empty = Array(this.s_rows)
+        .fill()
+        .map(() => Array(this.s_cols).fill(false));
+      this.c_clear_selection();
+    },
+    saveState() {
+      this.save({
+        s_rows: this.s_rows,
+        s_cols: this.s_cols,
+        s_data: this.s_data
+      });
+
+      console.log("Sheet data autosaved.");
+    },
+    restoreState(restoredData) {
+      this.s_rows = restoredData.s_rows;
+      this.s_cols = restoredData.s_cols;
+      this.s_data = restoredData.s_data;
+
+      this.s_selected_empty = Array(this.s_rows)
+        .fill()
+        .map(() => Array(this.s_cols).fill(false));
+      this.c_clear_selection();
     }
     // updateTableData: state => {}
   },
   mounted() {
-    this.createTable();
+    this.restore();
+    if (this.saved_data) {
+      this.restoreState(this.saved_data);
+    } else {
+      this.createTable();
+    }
+
     document.addEventListener("keydown", this.handleKeyEvent, false);
     this.c_selectStart(0, 0);
     this.mouseDown = false;
+
+    window.setInterval(() => {
+      this.saveState();
+    }, 60000);
   }
 };
 </script>
