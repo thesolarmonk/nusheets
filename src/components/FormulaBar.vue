@@ -23,8 +23,10 @@ export default {
 .spreadsheet__bar {
   width: 100%;
   height: 50px;
-  background-color: var(--primary-color);
   padding: 10px 10px 10px 5px;
+
+  background-color: var(--primary-color);
+  border: 1px solid var(--primary-color-invert);
 
   display: flex;
   flex-flow: row nowrap;

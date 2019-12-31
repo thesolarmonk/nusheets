@@ -14,27 +14,28 @@
           <th class="cell cell--header cell--row-header">{{ n_row + 1 }}</th>
           <td
             class="cell cell--data"
-            :class="{ 'cell--selected': cell.state, 'cell--active': cell.state == 2}"
+            :class="{ 'cell--selected': cell.state, 'cell--active': cell.state == 2, 'cell-selection': s_selected[n_row][n_col]}"
             v-for="(cell, n_col) in row"
-            :id="n_row + '_' + n_col"
             :key="n_row + '_' + n_col"
             :data-row="n_row"
             :data-column="n_col"
             @mousedown="c_selectStart(n_row, n_col)"
             @mouseover="c_selecting(n_row, n_col)"
             @mouseup="c_selectEnd()"
-            @dblclick="c_inputStart(n_row, n_col)"
           >
+            <!-- @dblclick="c_inputStart(n_row, n_col)"
+            -->
             <input
               v-if="cell.state"
               class="cell__input"
               type="text"
               v-model="c_exp"
               autocomplete="off"
-              @focus="c_inputStart(n_row, n_col)"
-              @blur="c_inputEnd()"
+              disabled
               @click.stop
             />
+            <!-- @blur="c_inputEnd()"
+            @focus="c_inputStart(n_row, n_col)"-->
             <span v-else>{{ cell.eval }}</span>
           </td>
         </tr>
@@ -44,14 +45,16 @@
 </template>
 
 <script>
+import _ from "../../node_modules/lodash";
+
 export default {
   data() {
     return {
-      s_rows: 500,
+      s_rows: 50,
       s_cols: 10,
       s_data: null,
-      s_state: null,
-      s_state_null: null,
+      s_selected: null,
+      s_selected_empty: null,
       c_pos: {
         row: 0,
         col: 0
@@ -76,7 +79,7 @@ export default {
       keys[e.keyCode] = true;
 
       switch (e.keyCode) {
-        //Delete
+        // Delete
         case 8:
           this.s_data[this.c_pos.row][this.c_pos.col].exp = null;
           this.s_data[this.c_pos.row][this.c_pos.col].eval = null;
@@ -97,7 +100,7 @@ export default {
           e.preventDefault();
           break;
 
-        // Enter
+        // Enter;
         case 13:
           if (this.c_data.state == 1) {
             this.c_inputStart(this.c_pos.row, this.c_pos.col);
@@ -109,6 +112,7 @@ export default {
         // Escape
         case 27:
           this.c_inputEnd();
+          this.c_clear_selection();
           break;
 
         // Left Arrow
@@ -146,29 +150,34 @@ export default {
       this.s_data = Array.from({ length: this.s_rows }, () =>
         Array.from({ length: this.s_cols }, () => {
           return {
-            exp: 123,
-            eval: 123,
+            exp: null,
+            eval: null,
             state: 0
           };
         })
       );
-      this.s_state = Array.from({ length: this.s_rows }, () =>
-        Array.from({ length: this.s_cols }, () => 0)
-      );
-      this.s_state_null = this.s_state;
+      this.s_selected_empty = Array(this.s_rows)
+        .fill()
+        .map(() => Array(this.s_cols).fill(false));
+      this.c_clear_selection();
     },
     c_selectStart(n_row, n_col) {
       this.mouseDown = true;
-      this.s_state = this.s_state_null;
+      this.c_clear_selection();
 
-      this.s_data[this.c_pos.row][this.c_pos.col].state = 0;
-      this.c_pos = { row: n_row, col: n_col };
-      this.c_exp = this.s_data[n_row][n_col].eval;
-      this.s_data[n_row][n_col].state = 1;
+      if (!this.s_data[n_row][n_col].state) {
+        this.s_data[this.c_pos.row][this.c_pos.col].state = 0;
+        this.c_pos = { row: n_row, col: n_col };
+        this.c_exp = this.c_data.eval;
+        this.s_data[n_row][n_col].state = 1;
+      }
     },
     c_selecting(n_row, n_col) {
-      if (this.mouseDown) {
-        this.s_state = this.s_state_null;
+      if (
+        this.mouseDown ||
+        (n_row == this.c_pos.row && n_col == this.c_pos.col)
+      ) {
+        this.c_clear_selection();
 
         let min_row = Math.min(n_row, this.c_pos.row);
         let min_col = Math.min(n_col, this.c_pos.col);
@@ -177,36 +186,45 @@ export default {
 
         for (let i = min_row; i <= max_row; i++) {
           for (let j = min_col; j <= max_col; j++) {
-            this.s_state[i][j] = 1;
+            this.s_selected[i][j] = true;
           }
         }
       }
     },
     c_selectEnd() {
       this.mouseDown = false;
-      this.s_state = this.s_state_null;
+    },
+    c_clear_selection() {
+      this.s_selected = _.cloneDeep(this.s_selected_empty);
     },
     c_inputStart(n_row, n_col) {
-      this.c_selectStart(n_row, n_col);
+      if (!this.c_data.state) {
+        this.c_selectStart(n_row, n_col);
+      }
       this.s_data[n_row][n_col].state = 2;
-      this.c_exp = this.s_data[n_row][n_col].exp;
+      this.c_exp = this.c_data.exp;
 
-      let input = document.getElementsByClassName("c_input")[0];
+      let input = document.getElementsByClassName("cell__input")[0];
+      input.disabled = false;
       input.focus();
       input.selectionStart = input.selectionEnd;
       input.scrollLeft = input.scrollWidth;
     },
     c_inputEnd() {
-      let input = document.getElementsByClassName("c_input")[0];
+      let input = document.getElementsByClassName("cell__input")[0];
+      input.disabled = true;
       input.blur();
 
-      let result = this.evaluateExp(this.c_exp);
+      let result = null;
+      if (this.c_exp) {
+        result = this.evaluateExp(this.c_exp);
+      }
 
       this.s_data[this.c_pos.row][this.c_pos.col].state = 1;
       this.s_data[this.c_pos.row][this.c_pos.col].exp = this.c_exp;
       this.s_data[this.c_pos.row][this.c_pos.col].eval = result;
 
-      // this.c_exp = result;
+      this.c_exp = result;
     },
     evaluateExp: function(exp) {
       let result;
@@ -236,8 +254,6 @@ export default {
 
       let re_rows = /(?<=[A-Z]{1})[0-9]{1,}/g;
       let cell_row_nums = exp.match(re_rows);
-
-      console.log(cell_row_nums);
 
       if (cell_row_nums === null) {
         return exp;
@@ -299,6 +315,8 @@ export default {
     border-collapse: collapse;
 
     .sheet__row {
+      width: 100%;
+
       .cell {
         user-select: none;
 
@@ -313,28 +331,39 @@ export default {
         color: var(--font-color);
         background-color: var(--primary-color);
 
+        max-width: 120px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
         &:hover {
           background-color: var(--secondary-color);
         }
 
         .cell__input {
-          width: 100%;
+          // max-width: 120px;
 
           border: none;
           display: inline;
           font-family: inherit;
           font-size: inherit;
           padding: none;
+          margin: none;
           background-color: transparent;
 
           &:focus {
             outline: none;
+            // max-width: 120px;
           }
         }
       }
 
       .cell--selected {
         background-color: var(--accent-color) !important;
+      }
+
+      .cell-selection {
+        background-color: var(--accent-color-light);
       }
 
       .cell--active {
