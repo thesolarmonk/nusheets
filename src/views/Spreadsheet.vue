@@ -1,7 +1,7 @@
 <template>
   <div class="spreadsheet fill-viewport">
-    <formula-bar></formula-bar>
-    <sheet></sheet>
+    <formula-bar :theme="theme" :light_theme="light_theme"></formula-bar>
+    <sheet :class="theme"></sheet>
   </div>
 </template>
 
@@ -13,6 +13,21 @@ export default {
   components: {
     FormulaBar,
     Sheet
+  },
+  data() {
+    return {
+      light_theme: true
+    };
+  },
+  computed: {
+    theme: function() {
+      return this.light_theme ? "theme-light" : "theme-dark";
+    }
+  },
+  created() {
+    this.$on("toggle-theme", t => {
+      this.light_theme = t;
+    });
   }
 };
 </script>

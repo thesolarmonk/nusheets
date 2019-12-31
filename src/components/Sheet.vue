@@ -146,8 +146,8 @@ export default {
       this.s_data = Array.from({ length: this.s_rows }, () =>
         Array.from({ length: this.s_cols }, () => {
           return {
-            exp: null,
-            eval: null,
+            exp: 123,
+            eval: 123,
             state: 0
           };
         })
@@ -310,8 +310,11 @@ export default {
         vertical-align: middle;
         padding: 3px 3px 3px 7px;
 
+        color: var(--font-color);
+        background-color: var(--primary-color);
+
         &:hover {
-          background-color: #ddd;
+          background-color: var(--secondary-color);
         }
 
         .cell__input {
@@ -331,7 +334,7 @@ export default {
       }
 
       .cell--selected {
-        background-color: rgb(172, 238, 255) !important;
+        background-color: var(--accent-color) !important;
       }
 
       .cell--active {
@@ -380,7 +383,7 @@ export default {
 .sheet__container {
   &::-webkit-scrollbar-track {
     background-color: var(--primary-color);
-    border: 1px solid var(--primary-color-dark);
+    border: 1px solid var(--primary-color-invert);
   }
 
   &::-webkit-scrollbar {
@@ -390,11 +393,11 @@ export default {
   }
 
   &::-webkit-scrollbar-thumb {
-    background-color: var(--primary-color-dark);
+    background-color: var(--primary-color-invert);
   }
 
   &::-webkit-scrollbar-corner {
-    background-color: var(--primary-color-dark);
+    background-color: var(--primary-color-invert);
   }
 }
 </style>

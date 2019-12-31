@@ -31,15 +31,6 @@ html {
 /* CSS Global Style Variables */
 
 :root {
-  --primary-color: #fff;
-  --primary-color-dark: #666;
-  --primary-color-invert: #000;
-  --secondary-color: rgb(230, 230, 230);
-  --accent-color: rgb(41, 111, 252);
-
-  --font-color-default: #000;
-  --font-color-invert: #fff;
-
   --font-family: "Inter", sans-serif;
   --font-style-default: normal;
   --font-size-default: 14px;
@@ -53,6 +44,28 @@ html {
   --font-variant-ligatures: none;
 }
 
+.theme-light {
+  --primary-color: #fff;
+  --secondary-color: rgb(230, 230, 230);
+  --accent-color: rgb(172, 238, 255);
+  --primary-color-invert: #666;
+
+  --font-color: #000;
+  --icon-color: invert(0%) sepia(98%) saturate(21%) hue-rotate(62deg)
+    brightness(90%) contrast(100%);
+}
+
+.theme-dark {
+  --primary-color: #000;
+  --secondary-color: #444;
+  --accent-color: rgb(0, 140, 255);
+  --primary-color-invert: #666;
+
+  --font-color: #fff;
+  --icon-color: invert(99%) sepia(87%) saturate(0%) hue-rotate(321deg)
+    brightness(117%) contrast(101%);
+}
+
 /* App Layout */
 
 html,
@@ -61,7 +74,8 @@ body,
   background-color: var(--primary-color);
   z-index: 0;
 
-  font-size: var(--font-size-default);
+  font: var(--font-style-default) var(--font-weight-normal)
+    var(--font-size-default) var(--font-family);
 }
 
 .app {
