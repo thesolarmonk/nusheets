@@ -57,6 +57,7 @@ export default {
     border-radius: 6px;
 
     font-size: var(--font-size-default);
+    color: var(--font-color);
 
     outline: none;
     border: 1px solid var(--primary-color-invert);
@@ -65,6 +66,7 @@ export default {
     padding-left: 10px;
     margin-right: 10px;
   }
+
   .bar__toggle-theme {
     flex-basis: 60px;
 

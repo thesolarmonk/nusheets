@@ -1,6 +1,6 @@
 <template>
   <div class="sheet__container">
-    <table class="sheet__table" :key="sheetKey">
+    <table class="sheet__table">
       <tbody>
         <tr class="sheet__row">
           <th class="cell cell--header cell--column-header cell--corner"></th>
@@ -18,7 +18,7 @@
             class="cell cell--data"
             :class="{ 'cell--selected': cell.state, 'cell--active': cell.state == 2, 'cell-selection': s_selected[n_row][n_col]}"
             v-for="(cell, n_col) in row"
-            :key="n_row + '_' + n_col"
+            :key="'index_'+ n_row + '_' + n_col"
             :data-row="n_row"
             :data-column="n_col"
             @mousedown="c_selectStart(n_row, n_col)"
@@ -64,10 +64,7 @@ export default {
         row: 0,
         col: 0
       },
-      // c_exp: null,
-      // c_eval: null,
-      mouseDown: false,
-      sheetKey: 0
+      mouseDown: false
     };
   },
   computed: {
@@ -117,9 +114,6 @@ export default {
       "update_c_exp",
       "toggleTheme"
     ]),
-    update_c_state(new_state) {
-      this.s_data[this.c_pos.row][this.c_pos.col].state = new_state;
-    },
     handleKeyEvent(e) {
       let keys = [];
       keys[e.keyCode] = true;
@@ -217,6 +211,7 @@ export default {
         else if ((e.ctrlKey || e.metaKey) && keys[83]) {
           this.saveState();
           e.preventDefault();
+          console.log("Sheet data saved.");
         }
 
         // Toggle Theme (Ctrl or Cmd + D)
@@ -248,6 +243,9 @@ export default {
           }
         }
       }
+    },
+    update_c_state(new_state) {
+      this.s_data[this.c_pos.row][this.c_pos.col].state = new_state;
     },
     c_selectStart(n_row, n_col) {
       if (this.c_state == 2) {
@@ -321,6 +319,52 @@ export default {
     inputChange: function(event) {
       this.update_c_exp(event.target.value);
     },
+    c_copy_selection(cut) {
+      let selection = [];
+
+      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
+        selection[i - this.sel_min_row] = [];
+        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
+          // eslint-disable-next-line prettier/prettier
+          selection[i - this.sel_min_row][j - this.sel_min_col] = this.s_data[
+            i
+          ][j];
+        }
+      }
+
+      navigator.clipboard.writeText(JSON.stringify(selection));
+
+      if (cut) {
+        this.c_delete_selection();
+      }
+
+      // this.c_selectStart(this.c_pos.row, this.c_pos.col);
+    },
+    c_paste_selection() {
+      navigator.clipboard.readText().then(selectionText => {
+        let selection = JSON.parse(selectionText);
+        let n_rows = selection.length;
+        let n_cols = selection[0].length;
+        for (let i = 0; i < n_rows; i++) {
+          for (let j = 0; j < n_cols; j++) {
+            selection[i][j].state = 0;
+            this.s_data[this.c_pos.row + i][this.c_pos.col + j] =
+              selection[i][j];
+          }
+        }
+        this.c_selectStart(this.c_pos.row, this.c_pos.col);
+      });
+    },
+    c_delete_selection() {
+      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
+        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
+          this.s_data[i][j].eval = null;
+          this.s_data[i][j].exp = null;
+          this.s_data[i][j].state = 0;
+        }
+      }
+      this.c_selectStart(this.c_pos.row, this.c_pos.col);
+    },
     evaluateExp: function(exp) {
       let result;
 
@@ -387,57 +431,7 @@ export default {
 
       return exp_new;
     },
-    c_copy_selection(cut) {
-      let selection = [];
-
-      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
-        selection[i - this.sel_min_row] = [];
-        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
-          // eslint-disable-next-line prettier/prettier
-          selection[i - this.sel_min_row][j - this.sel_min_col] = this.s_data[
-            i
-          ][j];
-        }
-      }
-
-      navigator.clipboard.writeText(JSON.stringify(selection));
-
-      if (cut) {
-        this.c_delete_selection();
-      }
-
-      // this.c_selectStart(this.c_pos.row, this.c_pos.col);
-    },
-    c_paste_selection() {
-      navigator.clipboard.readText().then(selectionText => {
-        let selection = JSON.parse(selectionText);
-        let n_rows = selection.length;
-        let n_cols = selection[0].length;
-        for (let i = 0; i < n_rows; i++) {
-          for (let j = 0; j < n_cols; j++) {
-            selection[i][j].state = 0;
-            this.s_data[this.c_pos.row + i][this.c_pos.col + j] =
-              selection[i][j];
-          }
-        }
-      });
-
-      // this.c_selectStart(this.c_pos.row, this.c_pos.col);
-      this.sheetKey++;
-    },
-    c_delete_selection() {
-      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
-        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
-          this.s_data[i][j].eval = null;
-          this.s_data[i][j].exp = null;
-          this.s_data[i][j].state = 0;
-        }
-      }
-      this.c_selectStart(this.c_pos.row, this.c_pos.col);
-    },
     createTable() {
-      this.s_rows = 50;
-      this.s_cols = 20;
       this.s_data = Array.from({ length: this.s_rows }, () =>
         Array.from({ length: this.s_cols }, () => {
           return {
@@ -461,8 +455,6 @@ export default {
       });
 
       this.c_selectStart(this.c_pos.row, this.c_pos.col);
-
-      console.log("Sheet data autosaved.");
     },
     restoreState(restoredData) {
       this.s_rows = restoredData.s_rows;
@@ -474,7 +466,6 @@ export default {
         .map(() => Array(this.s_cols).fill(false));
       this.c_clear_selection();
     }
-    // updateTableData: state => {}
   },
   mounted() {
     this.restore();
@@ -490,6 +481,7 @@ export default {
 
     window.setInterval(() => {
       this.saveState();
+      console.log("Sheet data autosaved.");
     }, 60000);
   }
 };
@@ -565,6 +557,9 @@ export default {
       }
 
       .cell--selected {
+        input {
+          color: var(--font-color);
+        }
         background-color: var(--accent-color) !important;
       }
 
