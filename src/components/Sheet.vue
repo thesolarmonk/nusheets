@@ -483,12 +483,15 @@ export default {
   width: 100%;
   height: 100%;
   overflow: scroll;
+  overflow-x: auto;
 
   .sheet__table {
     width: 100%;
+    // table-layout: fixed;
 
     position: relative;
     border-collapse: collapse;
+    word-wrap: break-all;
 
     .sheet__row {
       width: 100%;
@@ -498,6 +501,7 @@ export default {
 
         box-sizing: border-box;
         border: 1px solid #666;
+        min-width: var(--column-width-default);
         width: var(--column-width-default);
         height: var(--row-height-default);
 
@@ -507,20 +511,26 @@ export default {
         color: var(--font-color);
         background-color: var(--primary-color);
 
-        max-width: 120px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
 
         &:hover {
-          background-color: var(--secondary-color);
+          // background-color: var(--secondary-color);
+        }
+
+        div {
+          width: var(--column-width-default);
+          white-space: nowrap;
+          text-overflow: ellipsis;
         }
 
         .cell__input {
-          // max-width: 120px;
+          width: 100%;
+          // height: 100%;
 
           border: none;
-          display: inline;
+          display: block;
           font-family: inherit;
           font-size: inherit;
           padding: none;
@@ -529,7 +539,6 @@ export default {
 
           &:focus {
             outline: none;
-            // max-width: 120px;
           }
         }
       }
@@ -555,14 +564,31 @@ export default {
       }
 
       .cell--row-header {
-        width: var(--row-header-width-default);
+        min-width: var(--row-header-width-default) !important;
+        width: var(--row-header-width-default) !important;
         position: sticky;
         left: 0;
+
+        resize: vertical;
       }
 
       .cell--column-header {
+        min-width: var(--column-width-default);
+        padding: 0;
         position: sticky;
         top: 0;
+
+        div {
+          resize: horizontal;
+          overflow: auto;
+          min-width: var(--column-width-default);
+          display: block;
+          margin: 0;
+          padding: 0;
+
+          width: auto;
+          height: auto;
+        }
       }
 
       .cell--corner {
@@ -570,6 +596,8 @@ export default {
         position: sticky;
         left: 0;
         z-index: 1;
+
+        resize: none;
       }
 
       .cell:last-child {
@@ -602,7 +630,7 @@ export default {
   }
 
   &::-webkit-scrollbar-corner {
-    background-color: var(--primary-color-invert);
+    background-color: var(--font-color);
   }
 }
 </style>
