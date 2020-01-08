@@ -110,72 +110,129 @@ export default {
       let keys = [];
       keys[e.keyCode] = true;
 
-      switch (e.keyCode) {
-        // Delete
-        case 8:
-          this.s_data[this.c_pos.row][this.c_pos.col].exp = null;
-          this.s_data[this.c_pos.row][this.c_pos.col].eval = null;
-          this.c_exp = null;
-          e.preventDefault();
-          break;
-
-        // Tab
-        case 9:
-          if (keys[16]) {
-            this.c_selectStart(this.c_pos.row, Math.max(this.c_pos.col - 1, 0));
-          } else {
-            this.c_selectStart(
-              this.c_pos.row,
-              Math.min(this.c_pos.col + 1, this.s_cols - 1)
-            );
-          }
-          e.preventDefault();
-          break;
-
-        // Enter;
-        case 13:
-          if (this.c_data.state == 1) {
-            this.c_inputStart(this.c_pos.row, this.c_pos.col);
-          } else {
-            this.c_inputEnd(this.c_exp);
-          }
-          break;
-
-        // Escape
-        case 27:
+      // Enter
+      if (keys[13]) {
+        if (this.c_state == 1) {
+          this.c_inputStart(this.c_pos.row, this.c_pos.col);
+        } else {
           this.c_inputEnd(this.c_exp);
-          this.c_clear_selection();
-          break;
+        }
+        e.preventDefault();
+      }
 
-        // Left Arrow
-        case 37:
+      // Escape
+      else if (keys[27]) {
+        this.c_inputEnd(this.c_exp);
+        this.c_clear_selection();
+        e.preventDefault();
+      }
+
+      // Tab Left
+      else if (keys[9] && e.shiftKey) {
+        this.c_selectStart(this.c_pos.row, Math.max(this.c_pos.col - 1, 0));
+        e.preventDefault();
+      }
+
+      // Tab Left
+      else if (keys[9] && !e.shiftKey) {
+        this.c_selectStart(
+          this.c_pos.row,
+          Math.min(this.c_pos.col + 1, this.s_cols - 1)
+        );
+        e.preventDefault();
+      }
+
+      if (this.c_state !== 2) {
+        // Delete
+        if (keys[8]) {
+          this.c_delete_selection();
+          this.update_c_exp(null);
+          this.update_c_eval(null);
+          e.preventDefault();
+        }
+
+        // Cut (Ctrl or Cmd + X)
+        else if ((e.ctrlKey || e.metaKey) && keys[88]) {
+          this.c_copy_selection(true);
+          e.preventDefault();
+        }
+
+        // Copy (Ctrl or Cmd + C)
+        else if ((e.ctrlKey || e.metaKey) && keys[67]) {
+          this.c_copy_selection(false);
+          e.preventDefault();
+        }
+
+        // Paste (Ctrl or Cmd + V)
+        else if ((e.ctrlKey || e.metaKey) && keys[86]) {
+          this.c_paste_selection();
+          e.preventDefault();
+        }
+
+        // Arrow Left
+        else if (keys[37]) {
           this.c_selectStart(this.c_pos.row, Math.max(this.c_pos.col - 1, 0));
           e.preventDefault();
-          break;
+        }
 
-        // Up Arrow
-        case 38:
+        // Arrow Up
+        else if (keys[38]) {
           this.c_selectStart(Math.max(this.c_pos.row - 1, 0), this.c_pos.col);
           e.preventDefault();
-          break;
+        }
 
-        // Right Arrow
-        case 39:
+        // Arrow Right
+        else if (keys[39]) {
           this.c_selectStart(
             this.c_pos.row,
             Math.min(this.c_pos.col + 1, this.s_cols - 1)
           );
           e.preventDefault();
-          break;
+        }
 
-        // Down Arrow
-        case 40:
+        // Arrow Down
+        else if (keys[40]) {
           this.c_selectStart(
             Math.min(this.c_pos.row + 1, this.s_rows - 1),
             this.c_pos.col
           );
           e.preventDefault();
-          break;
+        }
+
+        // Save (Ctrl or Cmd + S)
+        else if ((e.ctrlKey || e.metaKey) && keys[83]) {
+          this.saveState();
+          e.preventDefault();
+        }
+
+        // Toggle Theme (Ctrl or Cmd + D)
+        else if ((e.ctrlKey || e.metaKey) && keys[68]) {
+          this.toggleTheme();
+          e.preventDefault();
+        }
+
+        // Alphanumeric
+        else if (
+          ((event.keyCode >= 48 && event.keyCode <= 57) ||
+            (event.keyCode >= 65 && event.keyCode <= 90)) &&
+          !e.ctrlKey &&
+          !e.metaKey
+        ) {
+          this.c_inputStart(this.c_pos.row, this.c_pos.col);
+        }
+
+        // Special Characters
+        else {
+          let chars = "=`~!@#$%^&*()_-+{}[]|:;'\"<>,.?/\\".split("");
+          let check_pressed = chars.reduce(
+            (pressed, key) => pressed + (e.key == key ? 1 : 0),
+            0
+          );
+
+          if (check_pressed) {
+            this.c_inputStart(this.c_pos.row, this.c_pos.col);
+          }
+        }
       }
     },
     c_selectStart(n_row, n_col) {
