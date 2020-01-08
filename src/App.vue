@@ -57,7 +57,7 @@ html {
   --font-variant-ligatures: none;
 }
 
-.theme-light {
+@mixin theme-light() {
   --primary-color: #fff;
   --secondary-color: rgb(230, 230, 230);
   --accent-color: rgb(172, 238, 255);
@@ -69,7 +69,7 @@ html {
     brightness(90%) contrast(100%);
 }
 
-.theme-dark {
+@mixin theme-dark() {
   --primary-color: #000;
   --secondary-color: #444;
   --accent-color: rgb(57, 166, 255);
@@ -101,4 +101,28 @@ body,
   width: 100vw;
   height: 100vh;
 }
+
+/* App Theme Preference */
+
+:root {
+  .theme-light {
+    @include theme-light();
+  }
+
+  .theme-dark {
+    @include theme-dark();
+  }
+}
+
+// @media (prefers-color-scheme: light) {
+//   :root {
+//     @include theme-light();
+//   }
+// }
+
+// @media (prefers-color-scheme: dark) {
+//   :root {
+//     @include theme-dark();
+//   }
+// }
 </style>
