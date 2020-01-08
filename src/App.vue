@@ -61,7 +61,7 @@ html {
   --primary-color: #fff;
   --secondary-color: rgb(230, 230, 230);
   --accent-color: rgb(172, 238, 255);
-  --accent-color-light: rgb(209, 246, 255);
+  --accent-color-light: rgb(227, 249, 255);
   --primary-color-invert: #666;
 
   --font-color: #000;
@@ -72,8 +72,8 @@ html {
 .theme-dark {
   --primary-color: #000;
   --secondary-color: #444;
-  --accent-color: rgb(0, 140, 255);
-  --accent-color-light: rgb(95, 183, 255);
+  --accent-color: rgb(57, 166, 255);
+  --accent-color-light: rgb(124, 194, 252);
   --primary-color-invert: #666;
 
   --font-color: #fff;
