@@ -61,14 +61,42 @@ export default {
         row: 0,
         col: 0
       },
-      c_exp: null,
-      mouseDown: false
+      c_selection: {
+        row: 0,
+        col: 0
+      },
+      // c_exp: null,
+      // c_eval: null,
+      mouseDown: false,
+      sheetKey: 0
     };
   },
   computed: {
-    ...mapGetters(["saved_data"]),
-    c_data: function() {
-      return this.s_data[this.c_pos.row][this.c_pos.col];
+    ...mapGetters(["c_data", "c_exp", "c_eval", "saved_data"]),
+    c_input: function() {
+      if (this.c_state === 1) {
+        return this.c_eval;
+      } else {
+        return this.c_exp;
+      }
+    },
+    sel_min_row: function() {
+      return Math.min(this.c_selection.row, this.c_pos.row);
+    },
+    sel_min_col: function() {
+      return Math.min(this.c_selection.col, this.c_pos.col);
+    },
+    sel_max_row: function() {
+      return Math.max(this.c_selection.row, this.c_pos.row);
+    },
+    sel_max_col: function() {
+      return Math.max(this.c_selection.col, this.c_pos.col);
+    },
+    // c_data: function() {
+    //   return this.s_data[this.c_pos.row][this.c_pos.col];
+    // },
+    c_state() {
+      return this.s_data[this.c_pos.row][this.c_pos.col].state;
     },
     col_headers: function() {
       return [...Array(this.s_cols).keys()].map(col =>
