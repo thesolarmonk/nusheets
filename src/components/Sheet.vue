@@ -284,9 +284,57 @@ export default {
 
       return exp_new;
     },
+    c_copy_selection(cut) {
+      let selection = [];
+
+      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
+        selection[i - this.sel_min_row] = [];
+        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
+          // eslint-disable-next-line prettier/prettier
+          selection[i - this.sel_min_row][j - this.sel_min_col] = this.s_data[
+            i
+          ][j];
+        }
+      }
+
+      navigator.clipboard.writeText(JSON.stringify(selection));
+
+      if (cut) {
+        this.c_delete_selection();
+      }
+
+      // this.c_selectStart(this.c_pos.row, this.c_pos.col);
+    },
+    c_paste_selection() {
+      navigator.clipboard.readText().then(selectionText => {
+        let selection = JSON.parse(selectionText);
+        let n_rows = selection.length;
+        let n_cols = selection[0].length;
+        for (let i = 0; i < n_rows; i++) {
+          for (let j = 0; j < n_cols; j++) {
+            selection[i][j].state = 0;
+            this.s_data[this.c_pos.row + i][this.c_pos.col + j] =
+              selection[i][j];
+          }
+        }
+      });
+
+      // this.c_selectStart(this.c_pos.row, this.c_pos.col);
+      this.sheetKey++;
+    },
+    c_delete_selection() {
+      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
+        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
+          this.s_data[i][j].eval = null;
+          this.s_data[i][j].exp = null;
+          this.s_data[i][j].state = 0;
+        }
+      }
+      this.c_selectStart(this.c_pos.row, this.c_pos.col);
+    },
     createTable() {
       this.s_rows = 50;
-      this.s_cols = 10;
+      this.s_cols = 20;
       this.s_data = Array.from({ length: this.s_rows }, () =>
         Array.from({ length: this.s_cols }, () => {
           return {
