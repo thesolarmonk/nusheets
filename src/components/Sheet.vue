@@ -1,6 +1,6 @@
 <template>
   <div class="sheet__container">
-    <table class="sheet__table">
+    <table class="sheet__table" :key="sheetKey">
       <tbody>
         <tr class="sheet__row">
           <th class="cell cell--header cell--column-header cell--corner"></th>
@@ -8,7 +8,9 @@
             class="cell cell--header cell--column-header"
             v-for="(col, n_col) in col_headers"
             :key="n_col"
-          >{{ col }}</th>
+          >
+            <div>{{ col }}</div>
+          </th>
         </tr>
         <tr class="sheet__row" v-for="(row, n_row) in s_data" :key="n_row">
           <th class="cell cell--header cell--row-header">{{ n_row + 1 }}</th>
@@ -23,20 +25,17 @@
             @mouseover="c_selecting(n_row, n_col)"
             @mouseup="c_selectEnd()"
           >
-            <!-- @dblclick="c_inputStart(n_row, n_col)"
-            -->
             <input
               v-if="cell.state"
               class="cell__input"
               type="text"
-              v-model="c_exp"
+              :value="c_input"
               autocomplete="off"
               disabled
               @click.stop
+              @input="inputChange"
             />
-            <!-- @blur="c_inputEnd()"
-            @focus="c_inputStart(n_row, n_col)"-->
-            <span v-else>{{ cell.eval }}</span>
+            <div v-else>{{ cell.eval }}</div>
           </td>
         </tr>
       </tbody>
@@ -53,7 +52,7 @@ export default {
   data() {
     return {
       s_rows: 50,
-      s_cols: 10,
+      s_cols: 20,
       s_data: null,
       s_selected: null,
       s_selected_empty: null,
@@ -104,8 +103,23 @@ export default {
       );
     }
   },
+  watch: {
+    c_pos: function(new_pos) {
+      this.update_c(this.s_data[new_pos.row][new_pos.col]);
+    }
+  },
   methods: {
-    ...mapMutations(["save", "restore"]),
+    ...mapMutations([
+      "save",
+      "restore",
+      "update_c",
+      "update_c_eval",
+      "update_c_exp",
+      "toggleTheme"
+    ]),
+    update_c_state(new_state) {
+      this.s_data[this.c_pos.row][this.c_pos.col].state = new_state;
+    },
     handleKeyEvent(e) {
       let keys = [];
       keys[e.keyCode] = true;
@@ -236,7 +250,7 @@ export default {
       }
     },
     c_selectStart(n_row, n_col) {
-      if (this.c_data.state == 2) {
+      if (this.c_state == 2) {
         this.c_inputEnd(this.c_exp);
       }
       this.mouseDown = true;
@@ -245,7 +259,8 @@ export default {
       if (!this.s_data[n_row][n_col].state) {
         this.s_data[this.c_pos.row][this.c_pos.col].state = 0;
         this.c_pos = { row: n_row, col: n_col };
-        this.c_exp = this.c_data.eval;
+        // this.c_exp = this.c_data.exp; //CHECK
+        // this.c_eval = this.c_data.eval;
         this.s_data[n_row][n_col].state = 1;
       }
     },
@@ -256,16 +271,15 @@ export default {
       ) {
         this.c_clear_selection();
 
-        let min_row = Math.min(n_row, this.c_pos.row);
-        let min_col = Math.min(n_col, this.c_pos.col);
-        let max_row = Math.max(n_row, this.c_pos.row);
-        let max_col = Math.max(n_col, this.c_pos.col);
+        this.c_selection = { row: n_row, col: n_col };
 
-        for (let i = min_row; i <= max_row; i++) {
-          for (let j = min_col; j <= max_col; j++) {
+        for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
+          for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
             this.s_selected[i][j] = true;
           }
         }
+      } else {
+        this.s_selected[this.c_pos.row][this.c_pos.col] = true;
       }
     },
     c_selectEnd() {
@@ -275,11 +289,12 @@ export default {
       this.s_selected = _.cloneDeep(this.s_selected_empty);
     },
     c_inputStart(n_row, n_col) {
-      if (!this.c_data.state) {
+      if (!this.c_state) {
         this.c_selectStart(n_row, n_col);
       }
       this.s_data[n_row][n_col].state = 2;
-      this.c_exp = this.c_data.exp;
+      // this.c_exp = this.c_data.exp;
+      // this.c_eval = this.c_data.eval;
 
       let input = document.getElementsByClassName("cell__input")[0];
       input.disabled = false;
@@ -301,7 +316,10 @@ export default {
       this.s_data[this.c_pos.row][this.c_pos.col].exp = exp;
       this.s_data[this.c_pos.row][this.c_pos.col].eval = result;
 
-      this.c_exp = result;
+      this.update_c_eval(result); //CHECK
+    },
+    inputChange: function(event) {
+      this.update_c_exp(event.target.value);
     },
     evaluateExp: function(exp) {
       let result;
@@ -438,8 +456,11 @@ export default {
       this.save({
         s_rows: this.s_rows,
         s_cols: this.s_cols,
-        s_data: this.s_data
+        s_data: this.s_data,
+        c_pos: this.c_pos
       });
+
+      this.c_selectStart(this.c_pos.row, this.c_pos.col);
 
       console.log("Sheet data autosaved.");
     },

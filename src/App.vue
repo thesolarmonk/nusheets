@@ -4,6 +4,19 @@
   </div>
 </template>
 
+<script>
+import { mapMutations } from "vuex";
+
+export default {
+  methods: {
+    ...mapMutations(["restore"])
+  },
+  mounted() {
+    this.restore();
+  }
+};
+</script>
+
 <style lang="scss">
 /* CSS Reset */
 @import "./styles/_reset.scss";

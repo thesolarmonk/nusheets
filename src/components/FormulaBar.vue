@@ -1,19 +1,32 @@
 <template>
   <div class="spreadsheet__bar" :class="theme">
     <img class="bar__formula-icon" src="../assets/fx.svg" />
-    <input class="bar__formula-bar" :class="theme" type="text" v-model="c_exp" />
-    <button class="bar__toggle-theme" :class="theme" @click="toggleTheme()">
+    <input
+      class="bar__formula-bar"
+      :class="theme"
+      type="text"
+      :value="c_exp"
+      @input="forumulaChange"
+    />
+    <button class="bar__toggle-theme" :class="theme" @click="toggleTheme">
       <i class="fas fa-adjust"></i>
     </button>
   </div>
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+import { mapMutations } from "vuex";
+
 export default {
-  props: ["theme", "light_theme", "c_exp"],
+  props: ["theme"],
+  computed: {
+    ...mapGetters(["c_exp"])
+  },
   methods: {
-    toggleTheme() {
-      this.$parent.$emit("toggle-theme", !this.light_theme);
+    ...mapMutations(["update_c_exp", "toggleTheme"]),
+    forumulaChange: function(event) {
+      this.update_c_exp(event.target.value);
     }
   }
 };
@@ -41,7 +54,7 @@ export default {
 
   .bar__formula-bar {
     flex-grow: 1;
-    border-radius: 10px;
+    border-radius: 6px;
 
     font-size: var(--font-size-default);
 
@@ -49,13 +62,14 @@ export default {
     border: 1px solid var(--primary-color-invert);
     background-color: var(--secondary-color);
 
+    padding-left: 10px;
     margin-right: 10px;
   }
   .bar__toggle-theme {
     flex-basis: 60px;
 
     background-color: var(--secondary-color);
-    border-radius: 10px;
+    border-radius: 6px;
     border: 1px solid var(--primary-color-invert);
 
     &:focus {
