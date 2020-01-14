@@ -101,6 +101,7 @@ export default {
     ...mapMutations([
       "save",
       "restore",
+      "reset",
       "update_c",
       "update_c_eval",
       "update_c_exp",
@@ -183,6 +184,13 @@ export default {
           this.saveState();
           e.preventDefault();
           console.log("Sheet data saved.");
+        }
+
+        // Reset (Ctrl or Cmd + E)
+        else if ((e.ctrlKey || e.metaKey) && keys[69]) {
+          this.reset();
+          e.preventDefault();
+          console.log("Sheet data reset.");
         }
 
         // Toggle Theme (Ctrl or Cmd + D)
