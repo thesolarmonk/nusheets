@@ -19,14 +19,12 @@
           <!-- Cells -->
           <td
             class="cell cell--data"
-            :class="{ 'cell--selected': cell.state, 'cell--active': cell.state == 2, 'cell-selection': s_selected[n_row][n_col]}"
+            :class="{ 'cell--selected': cell.state, 'cell--active': cell.state == 2 }"
             v-for="(cell, n_col) in row"
             :key="'index_'+ n_row + '_' + n_col"
+            :id="n_row + '_' + n_col"
             :data-row="n_row"
             :data-column="n_col"
-            @mousedown="c_selectStart(n_row, n_col)"
-            @mouseover="c_selecting(n_row, n_col)"
-            @mouseup="c_selectEnd()"
           >
             <!-- Cells Input -->
             <input
@@ -50,35 +48,23 @@
 <script>
 import { mapMutations } from "vuex";
 import { mapGetters } from "vuex";
-import _ from "../../node_modules/lodash";
 
 export default {
   // Local State variables for Sheet component
   data() {
     return {
       // Sheet dimensions
-      s_rows: 50,
+      s_rows: 1000,
       s_cols: 20,
 
       // Sheet cell data
       s_data: null,
 
-      // Sheet cell selection
-      s_selected: null,
-      s_selected_empty: null,
-
       // Co-ordinates of currently seleted cell
       c_pos: {
         row: 0,
         col: 0
-      },
-      c_selection: {
-        row: 0,
-        col: 0
-      },
-
-      // Check for mouse-drag
-      mouseDown: false
+      }
     };
   },
   computed: {
@@ -102,20 +88,6 @@ export default {
       return [...Array(this.s_cols).keys()].map(col =>
         String.fromCharCode(97 + col).toUpperCase()
       );
-    },
-
-    // Calculate the  boundary of the cell selection
-    sel_min_row: function() {
-      return Math.min(this.c_selection.row, this.c_pos.row);
-    },
-    sel_min_col: function() {
-      return Math.min(this.c_selection.col, this.c_pos.col);
-    },
-    sel_max_row: function() {
-      return Math.max(this.c_selection.row, this.c_pos.row);
-    },
-    sel_max_col: function() {
-      return Math.max(this.c_selection.col, this.c_pos.col);
     }
   },
   watch: {
@@ -150,13 +122,6 @@ export default {
         e.preventDefault();
       }
 
-      // Escape
-      else if (keys[27]) {
-        this.c_inputEnd(this.c_exp);
-        this.c_clear_selection();
-        e.preventDefault();
-      }
-
       // Tab Left
       else if (keys[9] && e.shiftKey) {
         this.c_selectStart(this.c_pos.row, Math.max(this.c_pos.col - 1, 0));
@@ -174,29 +139,12 @@ export default {
 
       // These shortcuts only work if the current cell input is not active
       if (this.c_state !== 2) {
-        // Delete selected cells
+        // Delete selected cell
         if (keys[8]) {
-          this.c_delete_selection();
+          this.s_data[this.c_pos.row][this.c_pos.col].exp = null;
+          this.s_data[this.c_pos.row][this.c_pos.col].eval = null;
           this.update_c_exp(null);
           this.update_c_eval(null);
-          e.preventDefault();
-        }
-
-        // Cut (Ctrl or Cmd + X)
-        else if ((e.ctrlKey || e.metaKey) && keys[88]) {
-          this.c_copy_selection(true);
-          e.preventDefault();
-        }
-
-        // Copy (Ctrl or Cmd + C)
-        else if ((e.ctrlKey || e.metaKey) && keys[67]) {
-          this.c_copy_selection(false);
-          e.preventDefault();
-        }
-
-        // Paste (Ctrl or Cmd + V)
-        else if ((e.ctrlKey || e.metaKey) && keys[86]) {
-          this.c_paste_selection();
           e.preventDefault();
         }
 
@@ -268,105 +216,40 @@ export default {
       }
     },
 
+    // Mousedown event handler
+    handleMouseEvent(e) {
+      if (e.target.tagName == "TD") {
+        this.c_selectStart(e.target.dataset.row, e.target.dataset.column);
+      } else if (e.target.tagName == "DIV") {
+        try {
+          this.c_selectStart(
+            e.target.parentElement.dataset.row,
+            e.target.parentElement.dataset.column
+          );
+        } finally {
+          // eslint-disable-next-line
+        }
+      }
+    },
+
     // Cell Selection
     c_selectStart(n_row, n_col) {
-      // Start selection on mousedown on a cell
+      // Select clicked cell
       if (this.c_state == 2) {
         this.c_inputEnd(this.c_exp);
       }
-      this.mouseDown = true;
-      this.c_clear_selection();
 
       if (!this.s_data[n_row][n_col].state) {
         this.s_data[this.c_pos.row][this.c_pos.col].state = 0;
-        this.c_pos = { row: n_row, col: n_col };
-        // this.c_exp = this.c_data.exp; //CHECK
-        // this.c_eval = this.c_data.eval;
+        this.c_pos = { row: parseInt(n_row), col: parseInt(n_col) };
+        document
+          .getElementById(this.c_pos.row + "_" + this.c_pos.col)
+          .classList.remove("cell--selected");
         this.s_data[n_row][n_col].state = 1;
+        document
+          .getElementById(n_row + "_" + n_col)
+          .classList.add("cell--selected");
       }
-    },
-    c_selecting(n_row, n_col) {
-      // If mouse-drag detected, update cell selection boundary
-      if (
-        this.mouseDown ||
-        (n_row == this.c_pos.row && n_col == this.c_pos.col)
-      ) {
-        this.c_clear_selection();
-
-        this.c_selection = { row: n_row, col: n_col };
-
-        for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
-          for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
-            this.s_selected[i][j] = true;
-          }
-        }
-      } else {
-        this.s_selected[this.c_pos.row][this.c_pos.col] = true;
-      }
-    },
-    c_selectEnd() {
-      // Clear selection on mouse-drag end
-      this.mouseDown = false;
-    },
-    c_clear_selection() {
-      // Re-initialize selected state to clear selection (deep copy)
-      this.s_selected = _.cloneDeep(this.s_selected_empty);
-    },
-
-    // Cell Selection Actions
-    c_copy_selection(cut) {
-      let selection = [];
-
-      // Copy data from all cells in selection boundary
-      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
-        selection[i - this.sel_min_row] = [];
-        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
-          // eslint-disable-next-line prettier/prettier
-          selection[i - this.sel_min_row][j - this.sel_min_col] = this.s_data[
-            i
-          ][j];
-        }
-      }
-
-      // Copy data to OS clipboard
-      navigator.clipboard.writeText(JSON.stringify(selection));
-
-      // If cut selection, delete the data in selected cells after copy
-      if (cut) {
-        this.c_delete_selection();
-      }
-
-      // this.c_selectStart(this.c_pos.row, this.c_pos.col);
-    },
-    c_paste_selection() {
-      // Read data from OS clipboard
-      navigator.clipboard.readText().then(selectionText => {
-        // Parse the copied data
-        let selection = JSON.parse(selectionText);
-        let n_rows = selection.length;
-        let n_cols = selection[0].length;
-
-        // Paste the data to all cells in selection boundary relative to currently selected cell
-        for (let i = 0; i < n_rows; i++) {
-          for (let j = 0; j < n_cols; j++) {
-            selection[i][j].state = 0;
-            this.s_data[this.c_pos.row + i][this.c_pos.col + j] =
-              selection[i][j];
-          }
-        }
-        this.c_selectStart(this.c_pos.row, this.c_pos.col);
-      });
-    },
-    c_delete_selection() {
-      // Clear the data of cells in the selection boundary
-      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
-        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
-          this.s_data[i][j].eval = null;
-          this.s_data[i][j].exp = null;
-          this.s_data[i][j].state = 0;
-        }
-      }
-      this.c_selectStart(this.c_pos.row, this.c_pos.col);
     },
 
     // Cell Input
@@ -501,10 +384,6 @@ export default {
           };
         })
       );
-      this.s_selected_empty = Array(this.s_rows)
-        .fill()
-        .map(() => Array(this.s_cols).fill(false));
-      this.c_clear_selection();
     },
     saveState() {
       // Save Sheet data to global State (and browser LocalStorage)
@@ -523,11 +402,6 @@ export default {
       this.s_rows = restoredData.s_rows;
       this.s_cols = restoredData.s_cols;
       this.s_data = restoredData.s_data;
-
-      this.s_selected_empty = Array(this.s_rows)
-        .fill()
-        .map(() => Array(this.s_cols).fill(false));
-      this.c_clear_selection();
     }
   },
 
@@ -543,8 +417,7 @@ export default {
 
     // Listen for keydown events
     document.addEventListener("keydown", this.handleKeyEvent, false);
-    this.c_selectStart(0, 0);
-    this.mouseDown = false;
+    document.addEventListener("mousedown", this.handleMouseEvent);
 
     // Autosave Sheet data every 60 seconds
     window.setInterval(() => {
@@ -628,10 +501,6 @@ export default {
           color: var(--font-color);
         }
         background-color: var(--accent-color) !important;
-      }
-
-      .cell-selection {
-        background-color: var(--accent-color-light);
       }
 
       .cell--active {
