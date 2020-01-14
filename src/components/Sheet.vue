@@ -129,6 +129,7 @@ export default {
     ...mapMutations([
       "save",
       "restore",
+      "reset",
       "update_c",
       "update_c_eval",
       "update_c_exp",
@@ -234,7 +235,14 @@ export default {
         else if ((e.ctrlKey || e.metaKey) && keys[83]) {
           this.saveState();
           e.preventDefault();
-          console.log("Sheet data saved.");
+          // console.log("Sheet data saved.");
+        }
+
+        // Reset (Ctrl or Cmd + E)
+        else if ((e.ctrlKey || e.metaKey) && keys[69]) {
+          this.reset();
+          e.preventDefault();
+          // console.log("Sheet data reset.");
         }
 
         // Toggle Theme (Ctrl or Cmd + D)
@@ -549,7 +557,7 @@ export default {
     // Autosave Sheet data every 60 seconds
     window.setInterval(() => {
       this.saveState();
-      console.log("Sheet data autosaved.");
+      // console.log("Sheet data autosaved.");
     }, 60000);
   }
 };

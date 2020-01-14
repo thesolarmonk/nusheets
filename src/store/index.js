@@ -57,6 +57,13 @@ export default new Vuex.Store({
       if (!state.theme) state.theme = 'theme-light';
     },
 
+    // Reset Sheet data and clear browser LocalStorage
+    reset() {
+      localStorage.removeItem('nusheets-data');
+      localStorage.removeItem('nusheets-theme');
+      location.reload();
+    },
+
     // Toggle global theme styling
     toggleTheme(state) {
       state.theme =
