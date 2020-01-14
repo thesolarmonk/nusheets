@@ -12,6 +12,7 @@ export default {
     ...mapMutations(["restore"])
   },
   mounted() {
+    // Attempt to restore saved Sheet data on App load
     this.restore();
   }
 };
@@ -27,21 +28,21 @@ html {
   font-family: "Inter", sans-serif;
 }
 
-/* Font Settings */
+/* Global Font Settings */
 
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Layout Settings */
+/* Global Layout Settings */
 
 * {
   box-sizing: border-box;
   -webkit-overflow-scrolling: touch;
 }
 
-/* CSS Global Style Variables */
+/* Global Font Variables */
 
 :root {
   --font-family: "Inter", sans-serif;
@@ -57,6 +58,8 @@ html {
   --font-variant-ligatures: none;
 }
 
+/* Global Theme Variables: Light */
+
 @mixin theme-light() {
   --primary-color: #fff;
   --secondary-color: rgb(230, 230, 230);
@@ -68,6 +71,8 @@ html {
   --icon-color: invert(0%) sepia(98%) saturate(21%) hue-rotate(62deg)
     brightness(90%) contrast(100%);
 }
+
+/* Global Theme Variables: Dark */
 
 @mixin theme-dark() {
   --primary-color: #000;
@@ -102,7 +107,10 @@ body,
   height: 100vh;
 }
 
-/* App Theme Preference */
+// App Theme Preference
+// Choose one of the mutually-exclusive options below based on requirements
+
+/* 1. Manual - set by the user*/
 
 :root {
   .theme-light {
@@ -113,6 +121,8 @@ body,
     @include theme-dark();
   }
 }
+
+/* 2. System Preference - set by the OS*/
 
 // @media (prefers-color-scheme: light) {
 //   :root {

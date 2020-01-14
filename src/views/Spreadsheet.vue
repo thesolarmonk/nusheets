@@ -1,3 +1,4 @@
+<!-- View containing all Spreadsheet sub-components -->
 <template>
   <div class="spreadsheet fill-viewport">
     <formula-bar :theme="theme"></formula-bar>
@@ -17,12 +18,14 @@ export default {
     Sheet
   },
   computed: {
+    // Change Spreadsheet theme based on global State
     ...mapGetters(["theme"])
   }
 };
 </script>
 
 <style lang="scss" scoped>
+// Layout styles for Spreadsheet sub-components
 .spreadsheet {
   display: flex;
   flex-flow: column nowrap;

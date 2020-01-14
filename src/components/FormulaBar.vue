@@ -21,10 +21,12 @@ import { mapMutations } from "vuex";
 export default {
   props: ["theme"],
   computed: {
+    // Getter for currently selected cell's formula
     ...mapGetters(["c_exp"])
   },
   methods: {
     ...mapMutations(["update_c_exp", "toggleTheme"]),
+    // Setter for currently selected cell's formula
     forumulaChange: function(event) {
       this.update_c_exp(event.target.value);
     }

@@ -2,6 +2,7 @@
   <div class="sheet__container">
     <table class="sheet__table">
       <tbody>
+        <!-- Column Headers -->
         <tr class="sheet__row">
           <th class="cell cell--header cell--column-header cell--corner"></th>
           <th
@@ -13,7 +14,9 @@
           </th>
         </tr>
         <tr class="sheet__row" v-for="(row, n_row) in s_data" :key="n_row">
+          <!-- Row Headers -->
           <th class="cell cell--header cell--row-header">{{ n_row + 1 }}</th>
+          <!-- Cells -->
           <td
             class="cell cell--data"
             :class="{ 'cell--selected': cell.state, 'cell--active': cell.state == 2, 'cell-selection': s_selected[n_row][n_col]}"
@@ -25,6 +28,7 @@
             @mouseover="c_selecting(n_row, n_col)"
             @mouseup="c_selectEnd()"
           >
+            <!-- Cells Input -->
             <input
               v-if="cell.state"
               class="cell__input"
@@ -33,7 +37,7 @@
               autocomplete="off"
               disabled
               @click.stop
-              @input="inputChange"
+              @input="c_inputChange"
             />
             <div v-else>{{ cell.eval }}</div>
           </td>
@@ -49,13 +53,21 @@ import { mapGetters } from "vuex";
 import _ from "../../node_modules/lodash";
 
 export default {
+  // Local State variables for Sheet component
   data() {
     return {
+      // Sheet dimensions
       s_rows: 50,
       s_cols: 20,
+
+      // Sheet cell data
       s_data: null,
+
+      // Sheet cell selection
       s_selected: null,
       s_selected_empty: null,
+
+      // Co-ordinates of currently seleted cell
       c_pos: {
         row: 0,
         col: 0
@@ -64,11 +76,16 @@ export default {
         row: 0,
         col: 0
       },
+
+      // Check for mouse-drag
       mouseDown: false
     };
   },
   computed: {
+    // Getters for global State data
     ...mapGetters(["c_data", "c_exp", "c_eval", "saved_data"]),
+
+    // Getters for the data and state of the currently selected cell
     c_input: function() {
       if (this.c_state === 1) {
         return this.c_eval;
@@ -76,6 +93,18 @@ export default {
         return this.c_exp;
       }
     },
+    c_state() {
+      return this.s_data[this.c_pos.row][this.c_pos.col].state;
+    },
+
+    // Generate alphabet column header labels
+    col_headers: function() {
+      return [...Array(this.s_cols).keys()].map(col =>
+        String.fromCharCode(97 + col).toUpperCase()
+      );
+    },
+
+    // Calculate the  boundary of the cell selection
     sel_min_row: function() {
       return Math.min(this.c_selection.row, this.c_pos.row);
     },
@@ -87,25 +116,16 @@ export default {
     },
     sel_max_col: function() {
       return Math.max(this.c_selection.col, this.c_pos.col);
-    },
-    // c_data: function() {
-    //   return this.s_data[this.c_pos.row][this.c_pos.col];
-    // },
-    c_state() {
-      return this.s_data[this.c_pos.row][this.c_pos.col].state;
-    },
-    col_headers: function() {
-      return [...Array(this.s_cols).keys()].map(col =>
-        String.fromCharCode(97 + col).toUpperCase()
-      );
     }
   },
   watch: {
+    //  Update component State when new cell selected
     c_pos: function(new_pos) {
       this.update_c(this.s_data[new_pos.row][new_pos.col]);
     }
   },
   methods: {
+    //  Methods to modify global App State
     ...mapMutations([
       "save",
       "restore",
@@ -114,6 +134,8 @@ export default {
       "update_c_exp",
       "toggleTheme"
     ]),
+
+    // Keypress event handler
     handleKeyEvent(e) {
       let keys = [];
       keys[e.keyCode] = true;
@@ -141,7 +163,7 @@ export default {
         e.preventDefault();
       }
 
-      // Tab Left
+      // Tab Right (Shift + Tab)
       else if (keys[9] && !e.shiftKey) {
         this.c_selectStart(
           this.c_pos.row,
@@ -150,8 +172,9 @@ export default {
         e.preventDefault();
       }
 
+      // These shortcuts only work if the current cell input is not active
       if (this.c_state !== 2) {
-        // Delete
+        // Delete selected cells
         if (keys[8]) {
           this.c_delete_selection();
           this.update_c_exp(null);
@@ -244,10 +267,10 @@ export default {
         }
       }
     },
-    update_c_state(new_state) {
-      this.s_data[this.c_pos.row][this.c_pos.col].state = new_state;
-    },
+
+    // Cell Selection
     c_selectStart(n_row, n_col) {
+      // Start selection on mousedown on a cell
       if (this.c_state == 2) {
         this.c_inputEnd(this.c_exp);
       }
@@ -263,6 +286,7 @@ export default {
       }
     },
     c_selecting(n_row, n_col) {
+      // If mouse-drag detected, update cell selection boundary
       if (
         this.mouseDown ||
         (n_row == this.c_pos.row && n_col == this.c_pos.col)
@@ -281,18 +305,78 @@ export default {
       }
     },
     c_selectEnd() {
+      // Clear selection on mouse-drag end
       this.mouseDown = false;
     },
     c_clear_selection() {
+      // Re-initialize selected state to clear selection (deep copy)
       this.s_selected = _.cloneDeep(this.s_selected_empty);
     },
+
+    // Cell Selection Actions
+    c_copy_selection(cut) {
+      let selection = [];
+
+      // Copy data from all cells in selection boundary
+      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
+        selection[i - this.sel_min_row] = [];
+        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
+          // eslint-disable-next-line prettier/prettier
+          selection[i - this.sel_min_row][j - this.sel_min_col] = this.s_data[
+            i
+          ][j];
+        }
+      }
+
+      // Copy data to OS clipboard
+      navigator.clipboard.writeText(JSON.stringify(selection));
+
+      // If cut selection, delete the data in selected cells after copy
+      if (cut) {
+        this.c_delete_selection();
+      }
+
+      // this.c_selectStart(this.c_pos.row, this.c_pos.col);
+    },
+    c_paste_selection() {
+      // Read data from OS clipboard
+      navigator.clipboard.readText().then(selectionText => {
+        // Parse the copied data
+        let selection = JSON.parse(selectionText);
+        let n_rows = selection.length;
+        let n_cols = selection[0].length;
+
+        // Paste the data to all cells in selection boundary relative to currently selected cell
+        for (let i = 0; i < n_rows; i++) {
+          for (let j = 0; j < n_cols; j++) {
+            selection[i][j].state = 0;
+            this.s_data[this.c_pos.row + i][this.c_pos.col + j] =
+              selection[i][j];
+          }
+        }
+        this.c_selectStart(this.c_pos.row, this.c_pos.col);
+      });
+    },
+    c_delete_selection() {
+      // Clear the data of cells in the selection boundary
+      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
+        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
+          this.s_data[i][j].eval = null;
+          this.s_data[i][j].exp = null;
+          this.s_data[i][j].state = 0;
+        }
+      }
+      this.c_selectStart(this.c_pos.row, this.c_pos.col);
+    },
+
+    // Cell Input
     c_inputStart(n_row, n_col) {
+      // Update cell formula on input start
+
       if (!this.c_state) {
         this.c_selectStart(n_row, n_col);
       }
       this.s_data[n_row][n_col].state = 2;
-      // this.c_exp = this.c_data.exp;
-      // this.c_eval = this.c_data.eval;
 
       let input = document.getElementsByClassName("cell__input")[0];
       input.disabled = false;
@@ -305,6 +389,7 @@ export default {
       input.disabled = true;
       input.blur();
 
+      // Evaluate cell formula on input end
       let result = null;
       if (exp) {
         result = this.evaluateExp(exp);
@@ -316,67 +401,27 @@ export default {
 
       this.update_c_eval(result); //CHECK
     },
-    inputChange: function(event) {
+    c_inputChange: function(event) {
+      // Update the value of the current cell formula in the formula bar
       this.update_c_exp(event.target.value);
     },
-    c_copy_selection(cut) {
-      let selection = [];
 
-      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
-        selection[i - this.sel_min_row] = [];
-        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
-          // eslint-disable-next-line prettier/prettier
-          selection[i - this.sel_min_row][j - this.sel_min_col] = this.s_data[
-            i
-          ][j];
-        }
-      }
-
-      navigator.clipboard.writeText(JSON.stringify(selection));
-
-      if (cut) {
-        this.c_delete_selection();
-      }
-
-      // this.c_selectStart(this.c_pos.row, this.c_pos.col);
-    },
-    c_paste_selection() {
-      navigator.clipboard.readText().then(selectionText => {
-        let selection = JSON.parse(selectionText);
-        let n_rows = selection.length;
-        let n_cols = selection[0].length;
-        for (let i = 0; i < n_rows; i++) {
-          for (let j = 0; j < n_cols; j++) {
-            selection[i][j].state = 0;
-            this.s_data[this.c_pos.row + i][this.c_pos.col + j] =
-              selection[i][j];
-          }
-        }
-        this.c_selectStart(this.c_pos.row, this.c_pos.col);
-      });
-    },
-    c_delete_selection() {
-      for (let i = this.sel_min_row; i <= this.sel_max_row; i++) {
-        for (let j = this.sel_min_col; j <= this.sel_max_col; j++) {
-          this.s_data[i][j].eval = null;
-          this.s_data[i][j].exp = null;
-          this.s_data[i][j].state = 0;
-        }
-      }
-      this.c_selectStart(this.c_pos.row, this.c_pos.col);
-    },
+    // Evaluate Cell Expressions/Formulas
     evaluateExp: function(exp) {
       let result;
 
+      // Attempt to evaluate cell exp if it starts with "="
       if (this.c_exp[0] === "=") {
         let exp_var;
 
+        // Try to resolve any referenced cells in the formula
         try {
           exp_var = this.evaluateVariables(exp);
         } catch (error) {
           result = "#ERROR!";
         }
 
+        // Try to evaluate the final expression
         try {
           result = eval(exp_var.substring(1));
         } catch (error) {
@@ -396,6 +441,7 @@ export default {
     evaluateVariables: function(exp) {
       exp = exp.toUpperCase();
 
+      // Get all cell rows in formula
       let re_rows = /(?<=[A-Z]{1})[0-9]{1,}/g;
       let cell_row_nums = exp.match(re_rows);
 
@@ -403,12 +449,14 @@ export default {
         return exp;
       }
 
+      // Get all cell columns in formula
       let re_cols = /[A-Z]{1}(?=[0-9]{1,})/g;
       let cell_col_letters = exp.match(re_cols);
       let cell_col_nums = cell_col_letters.map(
         col => col.toUpperCase().charCodeAt(0) - 65
       );
 
+      // Replace all instances of cell co-ordinates with their evaluated values
       let cells = cell_row_nums.length;
       let exp_new = exp;
       let exp_prev;
@@ -417,6 +465,15 @@ export default {
       for (let i = 0; i < cells; i++) {
         let value = this.s_data[cell_row_nums[i] - 1][cell_col_nums[i]].eval;
         if (value === null) value = 0;
+
+        // Prevent circular referencing (cell's formula can't refer to itself)
+        if (
+          cell_row_nums[i] - 1 == this.c_pos.row &&
+          cell_col_nums[i] == this.c_pos.col
+        ) {
+          value = "-/*";
+        }
+
         let re = new RegExp(cell_col_letters[i] + cell_row_nums[i]);
 
         exp_prev = exp_new;
@@ -431,7 +488,10 @@ export default {
 
       return exp_new;
     },
+
+    // Manage Cell Save State
     createTable() {
+      // Initlialize Sheet data
       this.s_data = Array.from({ length: this.s_rows }, () =>
         Array.from({ length: this.s_cols }, () => {
           return {
@@ -447,6 +507,7 @@ export default {
       this.c_clear_selection();
     },
     saveState() {
+      // Save Sheet data to global State (and browser LocalStorage)
       this.save({
         s_rows: this.s_rows,
         s_cols: this.s_cols,
@@ -457,6 +518,8 @@ export default {
       this.c_selectStart(this.c_pos.row, this.c_pos.col);
     },
     restoreState(restoredData) {
+      // Restore Sheet data from global State (and browser LocalStorage)
+
       this.s_rows = restoredData.s_rows;
       this.s_cols = restoredData.s_cols;
       this.s_data = restoredData.s_data;
@@ -467,7 +530,10 @@ export default {
       this.c_clear_selection();
     }
   },
+
+  // Run before Sheet component is rendered
   mounted() {
+    // Attempt to restore saved sheet data, else initialize a new Sheet
     this.restore();
     if (this.saved_data) {
       this.restoreState(this.saved_data);
@@ -475,10 +541,12 @@ export default {
       this.createTable();
     }
 
+    // Listen for keydown events
     document.addEventListener("keydown", this.handleKeyEvent, false);
     this.c_selectStart(0, 0);
     this.mouseDown = false;
 
+    // Autosave Sheet data every 60 seconds
     window.setInterval(() => {
       this.saveState();
       console.log("Sheet data autosaved.");
@@ -489,6 +557,7 @@ export default {
 
 <style lang="scss" scoped>
 .sheet__container {
+  // Inital cell sizes
   --column-width-default: 120px;
   --row-height-default: 30px;
   --row-header-width-default: 50px;
@@ -528,10 +597,6 @@ export default {
         overflow: hidden;
         text-overflow: ellipsis;
 
-        &:hover {
-          // background-color: var(--secondary-color);
-        }
-
         div {
           width: var(--column-width-default);
           white-space: nowrap;
@@ -556,6 +621,8 @@ export default {
         }
       }
 
+      // Cell States
+
       .cell--selected {
         input {
           color: var(--font-color);
@@ -570,6 +637,8 @@ export default {
       .cell--active {
         box-shadow: 1px 1px 4px 1px rgb(0, 68, 255);
       }
+
+      // Cell Types
 
       .cell--header {
         text-align: center;
@@ -629,6 +698,7 @@ export default {
   }
 }
 
+// Custom scroll-bar styling
 .sheet__container {
   &::-webkit-scrollbar-track {
     background-color: var(--primary-color);

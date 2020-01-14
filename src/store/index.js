@@ -4,6 +4,7 @@ import Vuex from 'vuex';
 Vue.use(Vuex);
 
 export default new Vuex.Store({
+  // Global State variables
   state: {
     saved_data: null,
     theme: 'theme-light',
@@ -13,6 +14,8 @@ export default new Vuex.Store({
       state: null
     }
   },
+
+  // Getters for global State variables
   getters: {
     saved_data(state) {
       return state.saved_data;
@@ -33,7 +36,10 @@ export default new Vuex.Store({
       return state.c.eval;
     }
   },
+
+  // Modifiers for global State variables
   mutations: {
+    // Store saved Sheet data to browser LocalStorage
     save(state, payload) {
       state.saved_data = payload;
       state.saved_data.s_data[state.saved_data.c_pos.row][
@@ -43,16 +49,22 @@ export default new Vuex.Store({
       localStorage.setItem('nusheets-theme', JSON.stringify(state.theme));
       state.last_saved = new Date();
     },
+
+    // Retrieve saved Sheet data from browser LocalStorage
     restore(state) {
       state.saved_data = JSON.parse(localStorage.getItem('nusheets-data'));
       state.theme = JSON.parse(localStorage.getItem('nusheets-theme'));
       if (!state.theme) state.theme = 'theme-light';
     },
+
+    // Toggle global theme styling
     toggleTheme(state) {
       state.theme =
         state.theme === 'theme-light' ? 'theme-dark' : 'theme-light';
       localStorage.setItem('nusheets-theme', JSON.stringify(state.theme));
     },
+
+    // Update data for currently seleted cell
     update_c(state, c) {
       state.c = c;
     },
@@ -62,6 +74,5 @@ export default new Vuex.Store({
     update_c_eval(state, c_eval) {
       state.c.eval = c_eval;
     }
-  },
-  actions: {}
+  }
 });
