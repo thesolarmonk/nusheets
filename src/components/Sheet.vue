@@ -564,6 +564,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/* Font Imports */
+@import url("https://rsms.me/inter/inter.css");
+html {
+  font-family: "Inter", sans-serif;
+}
+
 .sheet__container {
   // Inital cell sizes
   --column-width-default: 120px;
@@ -583,6 +589,8 @@ export default {
     border-collapse: collapse;
     word-wrap: break-all;
 
+    font-family: "Inter", sans-serif;
+
     .sheet__row {
       width: 100%;
 
@@ -601,6 +609,7 @@ export default {
         color: var(--font-color);
         background-color: var(--primary-color);
 
+        font-family: "Inter", sans-serif;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
