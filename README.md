@@ -102,7 +102,9 @@ URL: https://nusheets.netlify.com/
 
 - Add other common spreadsheet features
   - Sorting columns
-  -
+  - Add other spreadsheet functions: average, mean, median, sum, etc.
+  - Cell text and border formatting
+  - Import data from other spreadsheets or .csv
 - Formula Dependency
   - As multiple cells can refer to other cells, a dependency graph of formulas must be built so that the whole sheet can be updated appropriately.
   - A depth first search (DFS) can be run recursively to get a list of all cells that depend on the modified ones. These cells can be marked as 'dirty' and their values can be evaluated in order.
